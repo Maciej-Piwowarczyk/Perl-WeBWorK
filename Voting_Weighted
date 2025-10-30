@@ -1,0 +1,129 @@
+DOCUMENT();
+
+loadMacros(
+   "PGstandard.pl",
+   "MathObjects.pl",
+   "weightedGrader.pl",
+   "PGessaymacros.pl",
+   "parserPopUp.pl",
+);
+
+install_weighted_grader();
+TEXT(beginproblem());
+$showPartialCorrectAnswers = 1;
+$refreshCachedImages = 1;
+
+##############################################################
+#
+#  Setup
+#
+#
+
+Context("Numeric");
+Context()->flags->set(
+  tolerance => 0.1,
+  tolType => "absolute",
+);
+
+$quota = Real(random(20,24,1));
+$vote1 = Real(random(14,16,1));
+$vote2 = Real(random(8,9,1));
+$vote3 = Real(random(5,6,1));
+$vote4 = Real(random(3,4,1));
+$vote5 = Real(random(2,3,1));
+$total = $vote1 + $vote2 + $vote3 + $vote4 + $vote5;
+$partiesNum = Real(5);
+
+if ($total - $vote1 < $quota) {
+    $veto = PopUp(["?", "Yes", "No"],"Yes");
+} else {
+    $veto = PopUp(["?", "Yes", "No"],"No");
+}
+
+##############################################################
+#
+#  Text
+#
+#
+Context()->texStrings;
+BEGIN_TEXT
+
+In the country of Mechonis, the political parties all vote together as a block and a certain number
+of votes are required to pass a motion. The weighted voting system for this country is represented
+below.
+$BR
+$BR
+
+$BCENTER
+[$quota : $vote1, $vote2, $vote3, $vote4, $vote5]
+$ECENTER
+
+$BR
+$BR
+
+$BBOLD 1. (1 pt)$EBOLD 
+$BR
+What is the quota in this voting system?
+$BR
+$BR
+$BCENTER
+Quota \(=\) \{ans_rule\}.
+$ECENTER
+
+$BR
+$BR
+
+$BBOLD 2. (1 pt)$EBOLD 
+$BR
+How many different political parties (or blocks of voters) are in the Mechonian legislature?
+$BR
+$BR
+$BCENTER
+Number of parties \(=\) \{ans_rule\}.
+$ECENTER
+$BR
+$BR
+
+$BBOLD 3. (1 pt)$EBOLD
+$BR
+How many total votes are in the Mechonian legislature? (That is, what is the total number of votes among all parties?) Show your work in the space below. 
+$BR
+$BR
+$BCENTER
+Total votes \(=\) \{ans_rule\}.
+$ECENTER
+$BR
+$BR
+
+$BBOLD 4. (1 pt)$EBOLD 
+$BR
+Does the party with $vote1 votes have veto power? To earn full credit, you show your work in the space below.
+$BR
+$BR
+$BCENTER
+\{$veto->menu()\}.
+$ECENTER
+
+$BR
+$BR
+Show your work for Questions 3 and 4 here. Clearly indicate the problem number that corresponds to the work.
+$BR
+\{essay_box(5,50)\}
+
+END_TEXT
+Context()->normalStrings;
+##############################################################
+#
+#  Answers
+#
+#
+
+
+WEIGHTED_ANS($quota->cmp(),25);
+WEIGHTED_ANS($partiesNum->cmp(),25);
+WEIGHTED_ANS($total->cmp(),25);
+WEIGHTED_ANS($veto->cmp(),25);
+
+WEIGHTED_ANS(sub {essay_cmp()->evaluate(@_)}, 0);
+
+ENDDOCUMENT();
