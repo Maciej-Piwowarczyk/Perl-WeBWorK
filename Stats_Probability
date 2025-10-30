@@ -1,0 +1,265 @@
+DOCUMENT();
+
+loadMacros(
+   "PGstandard.pl",
+   "MathObjects.pl",
+   "weightedGrader.pl",
+   "PGinfo.pl",
+   "niceTables.pl",
+   "unionTables.pl",
+   "parserPopUp.pl",
+   "parserMultiAnswer.pl",
+   "PGchoicemacros.pl",
+   "PGessaymacros.pl"  # Allows students to show work
+);
+
+install_weighted_grader();
+TEXT(beginproblem());
+$showPartialCorrectAnswers = 1;
+$refreshCachedImages = 1;
+
+##############################################################
+#
+#  Setup
+#
+#
+
+Context("Numeric");
+Context()->flags->set(
+  tolerance => .05,
+  tolType => "absolute",
+);
+
+@diceValues = (Real(1), Real(2), Real(3), Real(4));
+$totalValues = scalar(@diceValues) * scalar(@diceValues);
+@table;
+
+sub numberOfMatches {
+my ( $value, @arr ) = @_;
+    my $count = 0;
+	foreach $item (@arr) {
+		if ( $item == $value){
+            $count++;
+        }
+	}
+	return $count;
+}
+
+#Choosing whether game will be products or sums
+$PorS = random(0,1,1);
+
+if ($PorS == 0) {
+    for ( my $i = 0; $i < scalar(@diceValues); $i++ ){
+        for ( my $j = 0; $j < scalar(@diceValues); $j++){
+        $table[$i * scalar(@diceValues) + $j] = $diceValues[$i] * $diceValues[$j];
+        }
+    }
+    
+    $tableSymbol = 'x';
+    $textSymbol = 'product';
+    
+    $twoPower = random(0,2,1);
+    $threePower = random(0,1,1);
+    $single = Real("2^($twoPower) * 3^($threePower)");
+    $matches = numberOfMatches($single, @table);
+    $singleProb = Real("$matches / $totalValues")*100; 
+} else {
+    for ( my $i = 0; $i < scalar(@diceValues); $i++ ){
+        for ( my $j = 0; $j < scalar(@diceValues); $j++){
+        $table[$i * scalar(@diceValues) + $j] = $diceValues[$i] + $diceValues[$j];
+        }
+    }
+    
+    $tableSymbol = '+';
+    $textSymbol = 'sum';
+    
+    $single = random(0,8,1);
+    $matches = numberOfMatches($single, @table);
+    $singleProb = Real("$matches / $totalValues")*100;
+}
+
+#Counting even and odd values
+sub evenCount {
+    my (@arr) = @_;
+    my $count = 0;
+	foreach $item (@arr) {
+		if ( $item % 2 == 0){
+            $count++;
+        }
+	}
+	return $count;
+}
+
+sub oddCount {
+    my (@arr) = @_;
+    my $count = 0;
+	foreach $item (@arr) {
+		if ( $item % 2 != 0){
+            $count++;
+        }
+	}
+	return $count;
+}
+
+$EorO = random(0,1,1);
+
+if ($EorO == 0) {
+    $EOtext = "$BBOLD even$EBOLD (i.e., 0, 2, 4, 6, etc)";
+    
+    $parityProb = evenCount(@table);
+    $parityProb = Real("$parityProb / $totalValues")*100;
+} else {
+    $EOtext = "$BBOLD odd$EBOLD (i.e., 1, 3, 5, 7, etc)";
+    
+    $parityProb = oddCount(@table);
+    $parityProb = Real("$parityProb / $totalValues")*100;
+}
+
+#Counting wrt inequality
+sub atMost {
+  my ( $value, @arr ) = @_;
+  my $count = 0;
+	foreach $item (@arr) {
+		if ( $item <= $value){
+      $count++;
+    }
+	}
+	return $count;
+}
+
+sub atLeast {
+    my ( $value, @arr ) = @_;
+    my $count = 0;
+	foreach $item (@arr) {
+		if ( $item >= $value){
+            $count++;
+        }
+	}
+	return $count;
+}
+
+sub moreThan {
+    my ( $value, @arr ) = @_;
+    my $count = 0;
+	foreach $item (@arr) {
+		if ( $item > $value){
+            $count++;
+        }
+	}
+	return $count;
+}
+
+sub lessThan {
+    my ( $value, @arr ) = @_;
+    my $count = 0;
+	foreach $item (@arr) {
+		if ( $item < $value){
+            $count++;
+        }
+	}
+	return $count;
+}
+
+@ineqChoices = NchooseK(4,2);
+$ineqValue = random(4,8);
+$ineqValue = Real($ineqValue);
+$ineqValue2 = random(4,8);
+$ineqValue2 = Real($ineqValue2);
+
+@ineqs = (atMost($ineqValue, @table), atLeast($ineqValue, @table), moreThan($ineqValue, @table), lessThan($ineqValue, @table));
+@ineqs2 = (atMost($ineqValue2, @table), atLeast($ineqValue2, @table), moreThan($ineqValue2, @table), lessThan($ineqValue2, @table));
+
+@ineqProbs = (Real("$ineqs[0]/$totalValues")*100,Real("$ineqs[1]/$totalValues")*100,Real("$ineqs[2]/$totalValues")*100,Real("$ineqs[3]/$totalValues")*100);
+@ineqProbs2 = (Real("$ineqs2[0]/$totalValues")*100,Real("$ineqs2[1]/$totalValues")*100,Real("$ineqs2[2]/$totalValues")*100,Real("$ineqs2[3]/$totalValues")*100);
+
+$answer3 = $ineqProbs[$ineqChoices[0]];
+$answer4 = $ineqProbs2[$ineqChoices[1]];
+
+@ineqText = ("$BBOLD at most$EBOLD (equal to or less than)", "$BBOLD at least$EBOLD (equal to or more than)", "$BBOLD more than$EBOLD", "$BBOLD less than$EBOLD");
+
+##############################################################
+#
+#  Text
+#
+#
+
+Context()->texStrings;
+BEGIN_TEXT
+You are playing a game of dice with your friend Alex. Alex rolls two four-sided dice (displaying the numbers 1 through 4) out of your view and then takes the $textSymbol of the two numbers. Below is a table displaying the possible results with the top row being the first die and the left column is the second die.
+$BR
+$BR
+\{
+DataTable(
+[
+[[$tableSymbol,midrule=>1],[$diceValues[0],b=>1],[$diceValues[1],b=>1],[$diceValues[2],b=>1],[$diceValues[3],b=>1]],
+[[$diceValues[0],b=>1],$table[0],$table[1], $table[2], $table[3]],
+[[$diceValues[1],b=>1],$table[4],$table[5], $table[6], $table[7]],
+[[$diceValues[2],b=>1],$table[8],$table[9], $table[10], $table[11]],
+[[$diceValues[3],b=>1],$table[12],$table[13], $table[14], $table[15]]
+],
+caption=>' ',
+align=>'p{.2in}|p{.2in}p{.2in}p{.2in}p{.2in}',
+);
+\}
+Answer the following questions based on the table above. $BBOLD Round your answers to two decimal places. $EBOLD
+$PAR
+
+$BBOLD 1. (2 pts)$EBOLD 
+$BR
+What is the probability that the $textSymbol of the two dice is $single. Explain your reasoning in the space below.
+$BR
+$BCENTER
+Probability is \{ans_rule\}%.
+$ECENTER
+$PAR
+
+$BBOLD 2. (2 pts)$EBOLD 
+$BR
+What is the probability that the $textSymbol of the dice is $EOtext. Explain your reasoning in the space below.
+$BR
+$BCENTER
+Probability is \{ans_rule\}%
+$ECENTER
+$PAR
+
+$BBOLD 3. (2 pts)$EBOLD 
+$BR
+What is the probability that the $textSymbol of the dice is $ineqText[$ineqChoices[0]] $ineqValue. Explain your reasoning in the space below.
+$BR
+$BCENTER
+Probability is \{ans_rule\}%
+$ECENTER
+$PAR
+
+
+$BBOLD 4. (2 pts)$EBOLD 
+$BR
+What is the probability that the $textSymbol of the dice is $ineqText[$ineqChoices[1]] $ineqValue2. Explain your reasoning in the space below.
+$BR
+$BCENTER
+Probability is \{ans_rule\}%.
+$ECENTER
+
+$BR
+$BR
+Briefly explain your reasoning for problems 1-4 in the space below. Carefully indicate the problem number corresponding to your work. $BBOLD You must show your work to receive full credit. $EBOLD
+$BR
+\{essay_box(5,50)\}
+
+END_TEXT
+
+Context()->normalStrings;
+##############################################################
+#
+#  Answers
+#
+#
+
+WEIGHTED_ANS($singleProb->cmp(),25);
+WEIGHTED_ANS($parityProb->cmp(),25);
+WEIGHTED_ANS($answer3->cmp(),25);
+WEIGHTED_ANS($answer4->cmp(),25);
+
+WEIGHTED_ANS(sub {essay_cmp()->evaluate(@_)}, 0);
+
+ENDDOCUMENT();
