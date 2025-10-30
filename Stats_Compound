@@ -1,0 +1,142 @@
+## DESCRIPTION
+
+## DBsubject('Contemporary Mathematics')
+## Author('Maciej Piwowarczyk')
+## Institution('University of Nebraska - Lincoln')
+
+DOCUMENT();
+loadMacros(
+   "PGstandard.pl",     # Standard macros for PG language
+   "MathObjects.pl",    
+   "parserPopUp.pl",    # Allows popup menus
+   "PGessaymacros.pl",  # Allows students to show work
+   "weightedGrader.pl", # Allows for weighted parts
+);
+
+install_weighted_grader();
+
+# Print problem number and point value (weight) for the problem
+TEXT(beginproblem());
+
+# Show which answers are correct and which ones are incorrect
+$showPartialCorrectAnswers = 1;
+
+##############################################################
+# Setup
+Context("Numeric");
+
+@comp_time_name = ('monthly', 'quarterly', 'yearly');
+@comp_time = (12,4,1);
+$r = random(0,2,1);
+
+$k = $comp_time[$r];
+$apr=random(2.20,4.20,0.1);
+$rate = $apr/100;
+$N=random(8,12,1);
+$p0=random(2500,3000,50);
+$final=Real(floor(($p0)*((1+$rate/$k)**($k*$N)*100)+0.5)/100);
+
+##############################################################
+# Text
+
+BEGIN_TEXT
+
+This may be of use to you: \(P = P_0(1+\frac{r}{k})^{kN}\).
+$PAR
+$BBOLD Note: $EBOLD You may assume for this problem that each year has exactly 365 days, 52 weeks, etc.
+$PAR
+You've invested your money into a savings account paying a $BBOLD $apr% APR$EBOLD compounded $BBOLD $comp_time_name[$r]$EBOLD. You initially deposit $BBOLD $$p0$EBOLD for a term of $BBOLD $N years$EBOLD.
+
+$PAR
+$BBOLD 1. (4 pts)$EBOLD
+$BR
+Using the information above, identify the following variables in the compound interest formula.
+$BCENTER
+\(P_0\) = \{ans_rule\}
+$BR
+$SPACE$SPACE\(r\) = \{ans_rule\}
+$BR
+$SPACE$SPACE\(k\) = \{ans_rule\}
+$BR
+$SPACE\(N\) = \{ans_rule\}
+$ECENTER
+
+$PAR
+$BBOLD 2. (2 pts)$EBOLD 
+$BR
+How much money would be in your account after $BBOLD $N years$EBOLD?
+$BR
+$\{ans_rule\} $BBOLD (Round to the nearest cent.)$EBOLD
+
+
+END_TEXT
+
+Context()->normalStrings;
+##############################################################
+# SOLUTIONS
+
+$stuP0 = 0;
+$stuR = 0;
+$stuK = 0;
+$stuN = 0;
+
+$stuFinal = 0;
+
+WEIGHTED_ANS(Real($p0)->cmp(checker => sub{ 
+    my ( $correct, $student, $ansHash ) = @_;
+    $stuP0 = $student;
+    
+    if (abs($p0 - $student) < .1) {
+        return 1.0
+    } else {
+        return 0
+    }
+}), 20);
+
+WEIGHTED_ANS(Real($rate)->cmp(checker => sub{ 
+    my ( $correct, $student, $ansHash ) = @_;
+    $stuR = $student;
+    
+    if (abs($rate - $student) < .001) {
+        return 1.0
+    } else {
+        return 0
+    }
+}), 20);
+
+WEIGHTED_ANS(Real($k)->cmp(checker => sub{ 
+    my ( $correct, $student, $ansHash ) = @_;
+    $stuK = $student;
+    
+    if (abs($k - $student) < .1) {
+        return 1.0
+    } else {
+        return 0
+    }
+}), 20);
+
+WEIGHTED_ANS(Real($N)->cmp(checker => sub{ 
+    my ( $correct, $student, $ansHash ) = @_;
+    $stuN = $student;
+    
+    if (abs($N - $student) < .1) {
+        return 1.0
+    } else {
+        return 0
+    }
+}), 20);
+
+WEIGHTED_ANS($final->cmp(checker => sub{ 
+    my ( $correct, $student, $ansHash ) = @_;
+    $stuFinal = $stuP0*(1+$stuR/$stuK)**($stuN*$stuK);
+    
+    if (abs($final - $student) < .1) {
+        return 1.0
+    } elsif (abs($stuFinal - $student) < .1) {
+        return 1.0
+    } else {
+        return 0
+    }
+}), 40);
+
+ENDDOCUMENT();
