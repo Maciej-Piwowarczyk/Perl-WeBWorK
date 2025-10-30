@@ -1,0 +1,103 @@
+## DESCRIPTION
+
+## DBsubject('Contemporary Mathematics')
+## Author('Maciej Piwowarczyk')
+## Institution('University of Nebraska - Lincoln')
+
+DOCUMENT();
+loadMacros(
+   "PGstandard.pl",     # Standard macros for PG language
+   "MathObjects.pl",    
+   "parserPopUp.pl",    # Allows popup menus
+   "PGessaymacros.pl",  # Allows students to show work
+   "weightedGrader.pl", # Allows for weighted parts
+   "answerCustom.pl",
+);
+
+install_weighted_grader();
+
+# Print problem number and point value (weight) for the problem
+TEXT(beginproblem());
+
+# Show which answers are correct and which ones are incorrect
+$showPartialCorrectAnswers = 1;
+
+##############################################################
+# Setup
+
+Context("Numeric");
+Context()->flags->set(
+  tolerance => 0.2,
+  tolType => "absolute",
+);
+
+Context()->variables->add(N=>'Real');
+
+$init = random(6,20,2);
+$diff = random(2,5,1);
+
+$ans1 = Real(random(4,10,1));
+$goal = $init+$ans1*$diff;
+
+
+
+
+$init_exp = random(30,60,10);
+$rate = random(1.1,1.3,0.02);
+
+$N = random(4,8,1);
+
+$ans2 = Real(floor($init_exp*($rate**$N)*100+0.5)/100);
+
+##############################################################
+# Text
+
+Context()->texStrings;
+
+BEGIN_TEXT
+Your friend has asked you for help in solving the following two problems regarding their flower garden.
+$PAR
+
+$BBOLD 1. (2 pts)$EBOLD 
+$BR
+Your friend consistently adds flowers to their garden. They are able to model the number of flowers they have planted using the following equation, where \(N\) is the number of months since they started their garden.
+$PAR
+\(P_N = $init+$diff N\) flowers in the garden.
+$BR
+$BR
+How many months after the initial planting will it take for your friend to reach $BBOLD $goal flowers$EBOLD in their garden? 
+$BR
+It will take \{ans_rule\} months.
+
+$PAR
+$BBOLD 2. (2 pts)$EBOLD 
+$BR
+As the number of flowers in your friend's garden grows, so does the number of bugs. Your friend is able to model the growth of the bug population as well, where \(N\) is the number of months since they started their garden.
+$PAR
+\(B_N = $init_exp($rate)^N\) bugs in the garden.
+$BR
+$BR
+How many bugs does your friend expect to have in their garden after $BBOLD $N months$EBOLD?
+$BR
+There will be \{ans_rule\} bugs after $N months. $r
+$PAR
+$BBOLD Round to two decimal places where necessary.$EBOLD
+
+$BR
+$BR
+If you have work that you would like to show for this problem, please enter it here:
+$BR
+\{essay_box(5,50)\}
+
+END_TEXT
+
+Context()->normalStrings;
+##############################################################
+# SOLUTIONS
+
+WEIGHTED_ANS($ans1->cmp(),50);
+WEIGHTED_ANS($ans2->cmp(),50);
+
+WEIGHTED_ANS(sub {essay_cmp()->evaluate(@_)}, 0);
+
+ENDDOCUMENT();
